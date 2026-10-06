@@ -1,6 +1,6 @@
 // ============================================================
 // Venera 漫画源：嬉皮漫画 (hipmh.com / m.hipmh.com)
-// key: hipmh | version: 1.0.1
+// key: hipmh | version: 1.0.2
 //
 // 数据来源（2026-10-04 实测）：
 //   列表/详情/搜索: https://hipapi1.s3file.top/v1/*
@@ -201,7 +201,7 @@ async function hipmhLoadMangas(params, page) {
 class HipmhComicSource extends ComicSource {
     name = "嬉皮漫画";
     key = "hipmh";
-    version = "1.0.1";
+    version = "1.0.2";
     minAppVersion = "1.0.0";
     url = "";
 
@@ -290,19 +290,16 @@ class HipmhComicSource extends ComicSource {
             const mid = hipmhShortMid(id);
             const info = await hipmhGetJson(HipmhApiBase + "/manga?mid=" + encodeURIComponent(mid));
 
-            // 拉取全部章节：接口单页上限 50 条，先取第 1 页拿到总页数，其余页并行拉取
+            // 拉取全部章节：接口单页上限 50 条，详情接口直接给 total_chapters，
+            // 算出总页数后全部并行一次拉完（省掉先取第1页拿页数的一次往返）
             const chaptersUrl = (p) =>
                 HipmhApiBase + "/manga/chapters?mid=" + encodeURIComponent(mid) +
                 "&page=" + p + "&per_page=50&order=asc";
-            const firstPage = await hipmhGetJson(chaptersUrl(1));
-            const totalPages = Math.min(firstPage.total_pages || 1, 200);
-            const chapterPages = [firstPage];
-            if (totalPages > 1) {
-                const tasks = [];
-                for (let p = 2; p <= totalPages; p++) tasks.push(hipmhGetJson(chaptersUrl(p)));
-                const rest = await Promise.all(tasks);
-                for (let i = 0; i < rest.length; i++) chapterPages.push(rest[i]);
-            }
+            const totalChapters = info.total_chapters || 0;
+            const totalPages = Math.min(Math.max(Math.ceil(totalChapters / 50), 1), 200);
+            const tasks = [];
+            for (let p = 1; p <= totalPages; p++) tasks.push(hipmhGetJson(chaptersUrl(p)));
+            const chapterPages = await Promise.all(tasks);
             const chapters = {};
             for (let i = 0; i < chapterPages.length; i++) {
                 const items = chapterPages[i].items || [];
