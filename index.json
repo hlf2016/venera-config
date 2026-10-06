@@ -1,0 +1,20 @@
+[
+    {
+        "name": "嬉皮漫画",
+        "fileName": "hipmh.js",
+        "key": "hipmh",
+        "version": "1.0.2"
+    },
+    {
+        "name": "漫蛙吧",
+        "fileName": "manwaba.js",
+        "key": "manwaba",
+        "version": "1.0.5"
+    },
+    {
+        "name": "MangaDex",
+        "fileName": "mangadex.js",
+        "key": "mangadex",
+        "version": "1.0.0"
+    }
+]
