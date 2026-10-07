@@ -28,5 +28,11 @@
         "fileName": "baozi.js",
         "key": "baozi",
         "version": "1.2.0"
+    },
+    {
+        "name": "如漫画",
+        "fileName": "rumanhua.js",
+        "key": "rumanhua",
+        "version": "1.1.1"
     }
 ]
