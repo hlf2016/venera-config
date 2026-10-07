@@ -2,11 +2,48 @@
 class RuManHua extends ComicSource {
   name = "如漫画";
   key = "rumanhua";
-  version = "1.1.1";
+  version = "1.2.0";
   minAppVersion = "1.4.0";
 
   url = "";
-  domain = "https://www.rumanhua.org";
+
+  // 域名设置：默认 www.rumanhua.org，可手动切换或自定义
+  settings = {
+    domain: {
+      title: "域名",
+      type: "select",
+      options: [
+        { value: "www.rumanhua.org", text: "www.rumanhua.org（默认）" },
+        { value: "www.rumanhua.com", text: "www.rumanhua.com" },
+      ],
+      default: "www.rumanhua.org",
+    },
+    customDomain: {
+      title: "自定义域名",
+      type: "input",
+      placeholder: "如 www.rumanhua.net，留空则用上面的选择",
+      default: "",
+    },
+  };
+
+  // 当前使用的完整域名（含 https://）
+  get baseDomain() {
+    let custom = "";
+    try { custom = (this.loadSetting("customDomain") || "").trim(); } catch (e) {}
+    if (custom) {
+      custom = custom.replace(/^https?:\/\//, "").replace(/\/.*$/, "");
+      if (custom) return "https://" + custom;
+    }
+    let d = "www.rumanhua.org";
+    try { d = this.loadSetting("domain") || d; } catch (e) {}
+    d = d.replace(/^https?:\/\//, "").replace(/\/.*$/, "") || "www.rumanhua.org";
+    return "https://" + d;
+  }
+
+  // 兼容旧代码的 domain 字段
+  get domain() {
+    return this.baseDomain;
+  }
 
   #picScriptCache = null;
   #decryptionKeysCache = null;
