@@ -16,5 +16,17 @@
         "fileName": "mangadex.js",
         "key": "mangadex",
         "version": "1.0.0"
+    },
+    {
+        "name": "Komiic",
+        "fileName": "komiic.js",
+        "key": "Komiic",
+        "version": "1.4.0"
+    },
+    {
+        "name": "包子漫画",
+        "fileName": "baozi.js",
+        "key": "baozi",
+        "version": "1.2.0"
     }
 ]
