@@ -2,7 +2,7 @@
 class RuManHua extends ComicSource {
   name = "如漫画";
   key = "rumanhua";
-  version = "2.0.0";
+  version = "2.1.0";
   minAppVersion = "1.4.0";
 
   url = "";
@@ -147,10 +147,48 @@ class RuManHua extends ComicSource {
     return 1;
   }
 
-  // 站内搜索接口已失效，暂不支持
+  // 搜索走移动端 m.rumanhua.org（PC 端搜索接口已失效）
+  // 移动端单页约 5 条结果，无有效分页
   search = {
     load: async (keyword, options, page) => {
-      return { comics: [], maxPage: 0 };
+      if (page > 1) return { comics: [], maxPage: 1 };
+      const mDomain = this.baseDomain.replace("://www.", "://m.");
+      const url = `${mDomain}/index.php/search?key=${encodeURIComponent(keyword)}`;
+      const res = await Network.get(url);
+      if (res.status !== 200) {
+        throw `HTTP Error ${res.status}`;
+      }
+      const document = new HtmlDocument(res.body);
+      const comics = [];
+      const items = document.querySelectorAll("ul.rankList li");
+      for (const li of items) {
+        const linkEl = li.querySelector("a[href*='/news/']");
+        if (!linkEl) continue;
+        const id = linkEl.attributes["href"];
+        const imgEl = li.querySelector("img");
+        let cover = imgEl ? imgEl.attributes["src"] : "";
+        // 过滤掉按钮图，只要封面
+        if (cover.includes("read_btn") || cover.includes("title_menu")) cover = "";
+        const titleEl = li.querySelector("p.title");
+        const title = titleEl ? titleEl.text.trim() : "";
+        if (!title) continue;
+        const subEl = li.querySelector("p.subtitle");
+        const subTitle = subEl ? subEl.text.trim() : "";
+        const bottomEl = li.querySelector("p.bottom");
+        let author = "";
+        if (bottomEl) {
+          // p.bottom 内文本为作者，排除嵌套 a/img
+          author = bottomEl.text.trim();
+        }
+        comics.push(new Comic({
+          id: id,
+          title: title,
+          subTitle: subTitle,
+          cover: cover,
+          description: author,
+        }));
+      }
+      return { comics: comics, maxPage: 1 };
     },
   };
 
