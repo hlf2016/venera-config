@@ -2,7 +2,7 @@
 class RuManHua extends ComicSource {
   name = "如漫画";
   key = "rumanhua";
-  version = "2.2.0";
+  version = "2.2.1";
   minAppVersion = "1.4.0";
 
   url = "";
@@ -172,12 +172,15 @@ class RuManHua extends ComicSource {
 
   // 搜索走移动端 m.rumanhua.org（PC 端搜索接口已失效）
   // 移动端单页约 5 条结果，无有效分页
+  // 注意：必须用移动端 UA，否则返回空页面
   search = {
     load: async (keyword, options, page) => {
       if (page > 1) return { comics: [], maxPage: 1 };
       const mDomain = this.baseDomain.replace("://www.", "://m.");
       const url = `${mDomain}/index.php/search?key=${encodeURIComponent(keyword)}`;
-      const res = await Network.get(url);
+      const res = await Network.get(url, {
+        "User-Agent": "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
+      });
       if (res.status !== 200) {
         throw `HTTP Error ${res.status}`;
       }
