@@ -2,7 +2,7 @@
 class RuManHua extends ComicSource {
   name = "如漫画";
   key = "rumanhua";
-  version = "2.1.0";
+  version = "2.2.0";
   minAppVersion = "1.4.0";
 
   url = "";
@@ -106,28 +106,51 @@ class RuManHua extends ComicSource {
   }
 
   parseComic(element) {
-    const linkElement = element.querySelector(".info a");
+    // 标题链接：优先 .title a，降级 .info a
+    let linkElement = element.querySelector(".title a");
+    if (!linkElement) linkElement = element.querySelector(".info a");
     if (!linkElement) return null;
 
-    const id = linkElement.attributes["href"];
-    const title = linkElement.attributes["title"];
+    const id = linkElement.attributes["href"] || "";
+    if (!id) return null;
+    // title 属性优先，取不到用文本
+    let title = (linkElement.attributes["title"] || "").trim();
+    if (!title) title = (linkElement.text || "").trim();
+    if (!title) {
+      const imgEl = element.querySelector(".img img");
+      if (imgEl) title = (imgEl.attributes["alt"] || imgEl.attributes["title"] || "").trim();
+    }
+    if (!title) return null;
+
     const imgElement = element.querySelector(".img img");
-    const cover = imgElement ? imgElement.attributes["src"] : "";
+    const cover = imgElement ? (imgElement.attributes["src"] || "") : "";
 
-    const latestChapterElement = element.querySelector(".tip");
-    const subTitle = latestChapterElement ? latestChapterElement.text : "";
+    const tipElement = element.querySelector(".tip");
+    const subTitle = tipElement ? (tipElement.text || "").trim() : "";
 
-    const descriptionElement = element.querySelector(".info .line .ibcont");
-    const description = descriptionElement ? descriptionElement.text : "";
+    // 作者：.info .line 下的文本（logo_1 那行）
+    let author = "";
+    const lineElements = element.querySelectorAll(".info .line");
+    for (const line of lineElements) {
+      const t = (line.text || "").trim();
+      // 分类行含 /tags/ 链接，简介行含 .ibcont，跳过
+      if (line.querySelector("a[href*='/tags/']")) continue;
+      if (line.querySelector(".ibcont")) continue;
+      if (t && !author) author = t;
+    }
 
-    const tagElements = element.querySelectorAll(".info .line a[href*='/tags/']");
-    const tags = tagElements.map((a) => a.text.trim());
+    const descElement = element.querySelector(".ibcont");
+    const description = descElement ? (descElement.text || "").trim() : "";
+
+    const tagElements = element.querySelectorAll("a[href*='/tags/']");
+    const tags = tagElements.map((a) => (a.text || "").trim()).filter((t) => t);
 
     return new Comic({
       id: id,
       title: title,
       subTitle: subTitle,
       cover: cover,
+      author: author,
       tags: tags,
       description: description,
     });
